@@ -1,0 +1,88 @@
+ <beans xmlns="http://www.springframework.org/schema/beans"
+ xmlns:security="http://www.springframework.org/schema/security"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+xmlns:aop="http://www.springframework.org/schema/aop"
+xmlns:context="http://www.springframework.org/schema/context"
+xmlns:p="http://www.springframework.org/schema/p"
+xmlns:tx="http://www.springframework.org/schema/tx"
+xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context/spring-context.xsd 
+http://www.springframework.org/schema/tx 
+http://www.springframework.org/schema/tx/spring-tx.xsd
+http://www.springframework.org/schema/security
+http://www.springframework.org/schema/security/spring-security-3.2.xsd">
+
+    <!-- Activates scanning of @Autowired -->
+    <context:annotation-config/>
+
+<bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+ <property name="dataSource" ref="dataSource" />
+ <property name="hibernateProperties">  
+            <props>  
+                <prop key="hibernate.dialect">org.hibernate.dialect.H2Dialect</prop>
+                <prop key="hibernate.current_session_context_class">thread</prop>  
+                <!-- <prop key="hibernate.hbm2ddl.auto">create</prop>  only for first time, otherwise table created again and again-->  
+                <prop key="hibernate.hbm2ddl.auto">update</prop>
+                <prop key="hibernate.show_sql">true</prop>                   
+            </props>  
+    </property>
+
+    
+   <property name="packagesToScan">
+    <list>        		
+         <value>grp.bros.model</value>        			
+    </list>
+</property>
+    
+    <!--  <property name="hibernate.implicit_naming_strategy" value="org.music.persistence.PGConstrainedImplicitNamingStrategy"/> -->
+</bean>
+<context:component-scan base-package="grp.bros.*"/>
+
+<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">  
+        <property name="driverClassName" value="org.h2.Driver"></property>  
+        <property name="url" value="jdbc:h2:tcp://localhost/~/test"></property>  
+        <property name="username" value="DevDatta"></property>
+        <property name="password" value="1995"></property>  
+</bean>    
+
+<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">  
+        <!-- one of the properties available; the maximum file size in bytes -->  
+        <property name="maxUploadSize" value="5242880">  
+    </property> 
+    </bean>
+     
+      <security:http auto-config="true" use-expressions="true">
+     <security:intercept-url pattern="/hom" access="permitAll"/>
+      <security:intercept-url pattern="/log" access="permitAll"/>
+      <security:intercept-url pattern="/reg" access="permitAll"/>
+     <security:intercept-url pattern="/shop" access="hasRole('ROLE_USER')"/>
+  <security:intercept-url pattern="/validate" access="hasAnyRole('ROLE_ADMIN','ROLE_USER')"/>
+  <security:intercept-url pattern="/disprods" access="hasAnyRole('ROLE_ADMIN','ROLE_USER')"/>
+     <security:intercept-url pattern="/add*" access="hasRole('ROLE_ADMIN')"/> 
+     <security:intercept-url pattern="/dis*" access="hasRole('ROLE_ADMIN')"/> 
+     <security:intercept-url pattern="/admin*" access="hasRole('ROLE_ADMIN')"/> 
+          <security:intercept-url pattern="/upd*" access="hasRole('ROLE_ADMIN')"/> 
+     <security:form-login login-page="/log" default-target-url="/validate"
+       authentication-failure-url="/loginfailure?error"/>
+     
+    <security:logout logout-success-url="/log"/>
+</security:http>
+
+
+    <security:authentication-manager>
+    <security:authentication-provider>
+    <security:jdbc-user-service data-source-ref="dataSource"
+ 	users-by-username-query="select mid,password,enabled from userdetails where mid=?" 
+ 	authorities-by-username-query="select mid,role from userdetails where mid=?" /> 
+ 	 <!-- 
+    <security:user-service>
+    <security:user mid="sharath@gmail.com" password="show" ISADMIN="true"/>
+    <security:user mid="dev@gmail.com" password="asdf" ISADMIN="false"/>
+    </security:user-service>
+     -->
+     </security:authentication-provider>
+    </security:authentication-manager>
+      
+</beans>
